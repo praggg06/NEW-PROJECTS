@@ -1,16 +1,76 @@
-# React + Vite
+# LPG Guardian – Smart LPG Distribution & Anti-Black Marketing System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Overview
 
-Currently, two official plugins are available:
+LPG Guardian is a smart LPG distribution monitoring platform designed to improve transparency, efficiency, and accountability in the LPG supply chain.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The system provides separate portals for:
 
-## React Compiler
+* Consumers
+* Distributors
+* Government Authorities
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+and enables real-time monitoring of LPG bookings, inventory management, complaint handling, and distribution operations.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Key Features
+
+### Consumer Portal
+
+* Consumer Registration & Login
+* LPG Cylinder Booking
+* Booking History Tracking
+* Complaint Registration
+* Real-time Request Status Monitoring
+
+### Distributor Portal
+
+* Distributor Registration & Login
+* View Pending Requests
+* Approve / Reject Cylinder Requests
+* Inventory Management
+* Reserved Stock Tracking
+* Complaint Resolution Workflow
+
+### Government Portal
+
+* Centralized Monitoring Dashboard
+* Distribution Analytics
+* Supply Chain Visibility
+* Black Marketing Detection Support
+* Complaint Oversight
+
+---
+
+## Technology Stack
+
+### Frontend
+
+* React.js
+* Vite
+* CSS
+
+### Backend
+
+* Supabase
+
+### Database
+
+* PostgreSQL (Supabase)
+
+### Deployment
+
+* Vercel
+
+---
+
+## Project Objective
+
+The objective of LPG Guardian is to reduce supply-chain inefficiencies and discourage black-market LPG distribution through transparent digital tracking and centralized monitoring.
+
+---
+
+## Team
+
+Developed as an academic project for smart LPG distribution management and anti-black-marketing monitoring.
