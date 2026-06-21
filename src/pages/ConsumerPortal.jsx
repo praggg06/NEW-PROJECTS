@@ -17,7 +17,16 @@ const initialProfile = {
 const sampleBookingHistory = [
   {
     id: 101,
-    consumer_name: "Demo Consumer",
+    consumer_name: "Raj Kumar",
+    state: "Maharashtra",
+    district: "Mumbai",
+    distributor_id: 1,
+    pincode: "400001",
+    status: "Pending",
+  },
+  {
+    id: 102,
+    consumer_name: "Priya Singh",
     state: "Delhi",
     district: "South Delhi",
     distributor_id: 2,
@@ -25,59 +34,91 @@ const sampleBookingHistory = [
     status: "Approved",
   },
   {
-    id: 102,
-    consumer_name: "Demo Consumer",
-    state: "Delhi",
-    district: "South Delhi",
-    distributor_id: 2,
-    pincode: "110016",
-    status: "Pending",
-  },
-  {
     id: 103,
-    consumer_name: "Demo Consumer",
-    state: "Delhi",
-    district: "South Delhi",
-    distributor_id: 2,
-    pincode: "110016",
+    consumer_name: "Amit Patel",
+    state: "Gujarat",
+    district: "Ahmedabad",
+    distributor_id: 3,
+    pincode: "380001",
     status: "Shipped",
   },
   {
     id: 104,
-    consumer_name: "Demo Consumer",
-    state: "Maharashtra",
-    district: "Mumbai",
-    distributor_id: 1,
-    pincode: "400001",
+    consumer_name: "Neha Verma",
+    state: "West Bengal",
+    district: "Kolkata",
+    distributor_id: 4,
+    pincode: "700001",
     status: "Completed",
   },
   {
     id: 105,
-    consumer_name: "Demo Consumer",
-    state: "Karnataka",
-    district: "Bengaluru",
-    distributor_id: 4,
-    pincode: "560001",
+    consumer_name: "Suresh Nair",
+    state: "Kerala",
+    district: "Thiruvananthapuram",
+    distributor_id: 5,
+    pincode: "695001",
     status: "Rejected",
+  },
+  {
+    id: 106,
+    consumer_name: "Raj Kumar",
+    state: "Maharashtra",
+    district: "Pune",
+    distributor_id: 1,
+    pincode: "411001",
+    status: "Completed",
+  },
+  {
+    id: 107,
+    consumer_name: "Priya Singh",
+    state: "Delhi",
+    district: "North Delhi",
+    distributor_id: 2,
+    pincode: "110007",
+    status: "Shipped",
   },
 ];
 
 const sampleComplaints = [
   {
     id: 201,
-    subject: "Late delivery",
-    details: "The cylinder arrival was delayed by two days.",
+    consumer_name: "Raj Kumar",
+    state: "Maharashtra",
+    district: "Mumbai",
+    subject: "Delayed refill",
+    details: "Cylinder delivery was delayed and the customer was not notified.",
     submittedAt: "2026-06-19 09:34",
     status: "Open",
+  },
+  {
+    id: 202,
+    consumer_name: "Priya Singh",
+    state: "Delhi",
+    district: "South Delhi",
+    subject: "Distributor mismatch",
+    details: "Received wrong distributor details in the booking confirmation.",
+    submittedAt: "2026-06-20 10:15",
+    status: "In Progress",
+  },
+  {
+    id: 203,
+    consumer_name: "Neha Verma",
+    state: "West Bengal",
+    district: "Kolkata",
+    subject: "Poor cylinder condition",
+    details: "Cylinder seal was broken on arrival.",
+    submittedAt: "2026-06-20 16:50",
+    status: "Resolved",
   },
 ];
 
 const sampleRefundRequests = [
   {
     id: 301,
-    bookingRef: "102",
-    amount: "450",
-    reason: "Cylinder was damaged on arrival.",
+    bookingRef: "103",
+    amount: "500",
+    reason: "Cylinder arrival was damaged.",
     submittedAt: "2026-06-20 11:12",
     status: "Under Review",
   },
@@ -89,13 +130,22 @@ const sampleRefundRequests = [
     submittedAt: "2026-06-20 16:20",
     status: "Approved",
   },
+  {
+    id: 303,
+    bookingRef: "105",
+    amount: "420",
+    reason: "Wrong distributor assigned to my order.",
+    submittedAt: "2026-06-21 09:30",
+    status: "Pending",
+  },
 ];
 
 const sampleDistributors = [
   { id: 1, name: "Mumbai LPG Distribution", state: "Maharashtra", district: "Mumbai" },
   { id: 2, name: "Delhi LPG Supply Co", state: "Delhi", district: "South Delhi" },
   { id: 3, name: "Gujarat Gas Agency", state: "Gujarat", district: "Ahmedabad" },
-  { id: 4, name: "Bengaluru Cylinder Network", state: "Karnataka", district: "Bengaluru" },
+  { id: 4, name: "Kolkata Cylinder Works", state: "West Bengal", district: "Kolkata" },
+  { id: 5, name: "Kerala Energy Hub", state: "Kerala", district: "Thiruvananthapuram" },
 ];
 
 function ConsumerPortal({ onBackToHome }) {
@@ -121,9 +171,12 @@ function ConsumerPortal({ onBackToHome }) {
   const [profile, setProfile] = useState(initialProfile);
 
   const districts = {
-    "Himachal Pradesh": ["Shimla", "Solan", "Bilaspur"],
+    Maharashtra: ["Mumbai", "Pune", "Nagpur"],
+    Delhi: ["South Delhi", "North Delhi", "New Delhi"],
+    Gujarat: ["Ahmedabad", "Surat", "Vadodara"],
     Kerala: ["Thiruvananthapuram", "Kochi", "Kozhikode"],
     "West Bengal": ["Kolkata", "Howrah", "Darjeeling"],
+    Karnataka: ["Bengaluru", "Mysuru", "Mangalore"],
   };
 
   const navItems = [

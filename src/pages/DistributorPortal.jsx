@@ -15,15 +15,56 @@ function DistributorPortal() {
   const distributorId = Number(localStorage.getItem("distributorId"));
   const distributorName = localStorage.getItem("distributorName");
 
-  const sampleDistributor = {
-    id: distributorId || 1,
-    name: distributorName || "Mumbai LPG Distribution",
-    agency_name: distributorName || "Mumbai LPG Distribution",
-    state: "Maharashtra",
-    district: "Mumbai",
-    status: "Active",
-    stock: 320,
-  };
+  const sampleDistributorsInfo = [
+    {
+      id: 1,
+      name: "Mumbai LPG Distribution",
+      agency_name: "Mumbai LPG Distribution",
+      state: "Maharashtra",
+      district: "Mumbai",
+      status: "Active",
+      stock: 320,
+    },
+    {
+      id: 2,
+      name: "Delhi LPG Supply Co",
+      agency_name: "Delhi LPG Supply Co",
+      state: "Delhi",
+      district: "South Delhi",
+      status: "Active",
+      stock: 260,
+    },
+    {
+      id: 3,
+      name: "Gujarat Gas Agency",
+      agency_name: "Gujarat Gas Agency",
+      state: "Gujarat",
+      district: "Ahmedabad",
+      status: "Active",
+      stock: 220,
+    },
+    {
+      id: 4,
+      name: "Kolkata Cylinder Works",
+      agency_name: "Kolkata Cylinder Works",
+      state: "West Bengal",
+      district: "Kolkata",
+      status: "Active",
+      stock: 180,
+    },
+    {
+      id: 5,
+      name: "Kerala Energy Hub",
+      agency_name: "Kerala Energy Hub",
+      state: "Kerala",
+      district: "Thiruvananthapuram",
+      status: "Active",
+      stock: 240,
+    },
+  ];
+
+  const sampleDistributor =
+    sampleDistributorsInfo.find((item) => item.id === distributorId) || sampleDistributorsInfo[0];
 
   const sampleRequests = [
     {
@@ -31,7 +72,7 @@ function DistributorPortal() {
       consumer_name: "Raj Kumar",
       state: "Maharashtra",
       district: "Mumbai",
-      distributor_id: distributorId || 1,
+      distributor_id: 1,
       pincode: "400001",
       status: "Pending",
     },
@@ -40,7 +81,7 @@ function DistributorPortal() {
       consumer_name: "Priya Singh",
       state: "Delhi",
       district: "South Delhi",
-      distributor_id: distributorId || 1,
+      distributor_id: 2,
       pincode: "110016",
       status: "Approved",
     },
@@ -49,26 +90,57 @@ function DistributorPortal() {
       consumer_name: "Amit Patel",
       state: "Gujarat",
       district: "Ahmedabad",
-      distributor_id: distributorId || 1,
+      distributor_id: 3,
       pincode: "380001",
       status: "Shipped",
     },
     {
       id: 104,
-      consumer_name: "Anjali Mehta",
+      consumer_name: "Neha Verma",
+      state: "West Bengal",
+      district: "Kolkata",
+      distributor_id: 4,
+      pincode: "700001",
+      status: "Completed",
+    },
+    {
+      id: 105,
+      consumer_name: "Suresh Nair",
+      state: "Kerala",
+      district: "Thiruvananthapuram",
+      distributor_id: 5,
+      pincode: "695001",
+      status: "Rejected",
+    },
+    {
+      id: 106,
+      consumer_name: "Raj Kumar",
       state: "Maharashtra",
-      district: "Mumbai",
-      distributor_id: distributorId || 1,
-      pincode: "400001",
+      district: "Pune",
+      distributor_id: 1,
+      pincode: "411001",
+      status: "Shipped",
+    },
+    {
+      id: 107,
+      consumer_name: "Priya Singh",
+      state: "Delhi",
+      district: "North Delhi",
+      distributor_id: 2,
+      pincode: "110007",
       status: "Completed",
     },
   ];
 
-  const sampleStockData = {
-    distributor_name: sampleDistributor.name,
-    current_stock: sampleDistributor.stock,
-    reserved_stock: 100,
+  const sampleStockMap = {
+    1: { distributor_name: "Mumbai LPG Distribution", current_stock: 320, reserved_stock: 100 },
+    2: { distributor_name: "Delhi LPG Supply Co", current_stock: 260, reserved_stock: 80 },
+    3: { distributor_name: "Gujarat Gas Agency", current_stock: 220, reserved_stock: 60 },
+    4: { distributor_name: "Kolkata Cylinder Works", current_stock: 180, reserved_stock: 70 },
+    5: { distributor_name: "Kerala Energy Hub", current_stock: 240, reserved_stock: 90 },
   };
+
+  const sampleStockData = sampleStockMap[distributorId] || sampleStockMap[1];
 
  const navItems = [
   {
@@ -142,7 +214,7 @@ function DistributorPortal() {
 
     const requestData =
       requestResponse.error || !requestResponse.data?.length
-        ? sampleRequests
+        ? sampleRequests.filter((request) => request.distributor_id === distributorId)
         : requestResponse.data;
     const distributorData =
       distributorResponse.error || !distributorResponse.data
@@ -241,7 +313,8 @@ async function addStock() {
     // NEW: log this addition so Government can audit received vs delivered
     await supabase.from("stock_updates").insert([
       {
-        distributor_name: stockData.distributor_name,
+        distributor_name:
+          stockData?.distributor_name || distributor?.agency_name || "",
         district: distributor?.district || null,
         cylinder_type: "Standard",
         quantity: Number(stockInput),

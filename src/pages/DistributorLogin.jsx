@@ -5,6 +5,8 @@ const demoDistributors = [
   { id: 1, name: "Mumbai LPG Distribution", username: "dist_mumbai", password: "Action123" },
   { id: 2, name: "Delhi LPG Supply Co", username: "dist_delhi", password: "Secure321" },
   { id: 3, name: "Gujarat Gas Agency", username: "dist_guj", password: "Launch2026" },
+  { id: 4, name: "Kolkata Cylinder Works", username: "dist_kolkata", password: "WestBengal@22" },
+  { id: 5, name: "Kerala Energy Hub", username: "dist_kerala", password: "Kerala@2026" },
 ];
 
 function DistributorLogin({ onBackToHome, setPage })  {
