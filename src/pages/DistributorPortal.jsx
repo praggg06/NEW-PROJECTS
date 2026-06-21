@@ -6,108 +6,60 @@ import SectionCard from "../components/SectionCard";
 import StatusBadge from "../components/StatusBadge";
 
 function DistributorPortal() {
-  const rawDistributorId = localStorage.getItem("distributorId");
-  const distributorId = rawDistributorId ? Number(rawDistributorId) : 1;
-  const distributorName = localStorage.getItem("distributorName") || "Mumbai LPG Distribution";
-  const effectiveDistributorId = Number.isInteger(distributorId) && distributorId > 0 ? distributorId : 1;
-
-  const sampleDistributor = {
-    id: effectiveDistributorId,
-    name: distributorName,
-    agency_name: distributorName,
-    state: "Maharashtra",
-    district: "Mumbai",
-    status: "Active",
-    stock: 320,
-  };
-
-  const sampleStockData = {
-    distributor_name: sampleDistributor.name,
-    current_stock: sampleDistributor.stock,
-    reserved_stock: 100,
-  };
-
-  const sampleRequests = [
-  {
-      id: 101,
-      consumer_name: "Raj Kumar",
-      state: "Maharashtra",
-      district: "Mumbai",
-      distributor_id: effectiveDistributorId,
-      pincode: "400001",
-      status: "Pending",
-    },
-    {
-      id: 102,
-      consumer_name: "Priya Singh",
-      state: "Delhi",
-      district: "South Delhi",
-      distributor_id: effectiveDistributorId,
-      pincode: "110016",
-      status: "Approved",
-    },
-    {
-      id: 103,
-      consumer_name: "Amit Patel",
-      state: "Gujarat",
-      district: "Ahmedabad",
-      distributor_id: effectiveDistributorId,
-      pincode: "380001",
-      status: "Shipped",
-    },
-    {
-      id: 104,
-      consumer_name: "Anjali Mehta",
-      state: "Maharashtra",
-      district: "Mumbai",
-      distributor_id: effectiveDistributorId,
-      pincode: "400001",
-      status: "Completed",
-    },
-  ];
-
   const [activeView, setActiveView] = useState("pending");
-  const [requests, setRequests] = useState(sampleRequests);
-  const [distributor, setDistributor] = useState(sampleDistributor);
+  const [requests, setRequests] = useState([]);
+  const [distributor, setDistributor] = useState(null);
+  const [stockData, setStockData] = useState(null);
   const [stockInput, setStockInput] = useState("");
-  const [stockData, setStockData] = useState(sampleStockData);
+  const distributorId = Number(localStorage.getItem("distributorId"));
+  const distributorName = localStorage.getItem("distributorName");
 
+  
+console.log(
+  "Distributor ID:",
+  localStorage.getItem("distributorId")
+);
+
+console.log(
+  "Distributor Name:",
+  localStorage.getItem("distributorName")
+);
+
+console.log(
+  "Using Distributor Name:",
+  distributorName
+);
  const navItems = [
+  
   {
     id: "pending",
-    label: "Pending Requests",
-    description: "Requests waiting for action",
+    label: "Orders Queue",
+    description: "Awaiting action",
     icon: "01",
   },
-  {
-    id: "approved",
-    label: "Approved Requests",
-    description: "Ready for dispatch",
+   {
+    id: "stock",
+    label: "Inventory",
+    description: "Warehouse stock",
     icon: "02",
   },
   {
-    id: "shipped",
-    label: "Shipped Orders",
-    description: "Orders in transit",
+    id: "approved",
+    label: "Approved",
+    description: "Ready for dispatch",
     icon: "03",
   },
   {
-    id: "completed",
-    label: "Completed Orders",
-    description: "Successfully delivered",
+    id: "shipped",
+    label: "In Transit",
+    description: "Orders on route",
     icon: "04",
   },
   {
-    id: "stock",
-    label: "Stock Overview",
-    description: "Inventory at a glance",
+    id: "completed",
+    label: "Delivered",
+    description: "Successfully completed",
     icon: "05",
-  },
-  {
-    id: "profile",
-    label: "Profile Page",
-    description: "Agency details",
-    icon: "06",
   },
 ];
 
@@ -117,68 +69,210 @@ function DistributorPortal() {
     fetchDashboardData();
   }, []);
 
-  async function fetchDashboardData() {
-    const [requestResponse, distributorResponse, stockResponse] = await Promise.all([
-      supabase
-        .from("requests")
-        .select("*")
-        .eq("distributor_id", distributorId)
-        .order("id", { ascending: false }),
-      supabase
-        .from("distributors")
-        .select("*")
-        .eq("id", distributorId)
-        .single(),
-      supabase
-        .from("distributor_stock")
-        .select("*")
-        .eq("distributor_name", distributorName)
-        .single(),
-    ]);
+async function fetchDashboardData() {
+  console.log(
+  "Distributor Name Used:",
+  distributorName
+);
+  const distributorResponse =
+  await supabase
+    .from("distributors")
+    .select("*")
+   .eq(
+  "name",
+  distributorName
+)
+    .single();
+    if (distributorResponse.error) {
+  console.log(distributorResponse.error);
+  return;
+}
 
-    if (requestResponse.error) {
-      console.log(requestResponse.error);
-    } else {
-      setRequests(requestResponse.data || []);
-    }
+setDistributor(distributorResponse.data);
 
-    const requestData =
-      requestResponse.error || !requestResponse.data?.length
-        ? sampleRequests
-        : requestResponse.data;
-    const distributorData =
-      distributorResponse.error || !distributorResponse.data
-        ? sampleDistributor
-        : distributorResponse.data;
-    const stockDataRow =
-      stockResponse.error || !stockResponse.data
-        ? sampleStockData
-        : stockResponse.data;
+const distributorDbName =
+  distributorResponse.data.name;
+  console.log(
+  "Distributor Name From Login:",
+ distributorDbName
+);
+      const requestResponse =
+  await supabase
+    .from("requests")
+    .select("*")
+    .eq(
+      "assigned_distributor",
+     distributorDbName
+    )
+    .order("id", {
+      ascending: false,
+    });
 
-    if (requestResponse.error) {
-      console.log(requestResponse.error);
-    }
+    setRequests(
+  requestResponse.data || []
+);
+  
 
-    setRequests(requestData);
-    setDistributor(distributorData);
-    setStockData(stockDataRow);
+  if (requestResponse.error) {
+    console.log(requestResponse.error);
+  } else {
+    setRequests(requestResponse.data || []);
+
+    console.log(
+  "Distributor Login Name:",
+  distributorDbName
+);
+
+console.log(
+  "Requests Found:",
+  requestResponse.data
+);
   }
 
-  async function approveRequest(id) {
-    const { error } = await supabase
-      .from("requests")
-      .update({ status: "Approved" })
-      .eq("id", id);
+  if (distributorResponse.error) {
+    console.log(distributorResponse.error);
+  } else {
+    setDistributor(distributorResponse.data || null);
 
-    if (error) {
-      console.log(error);
-      alert("Approval Failed");
-      return;
-    }
+    console.log(
+  "All Requests:",
+  requestResponse.data
+);
 
-    alert("Request Approved");
+  console.log(
+  "Distributor Name:",
+  distributorDbName
+);
+
+const { data: stockDataRow, error: stockError } =
+  await supabase
+    .from("distributor_stock")
+    .select("*")
+    .eq(
+      "distributor_name",
+      distributorDbName
+    )
+    .maybeSingle();
+
+console.log("Stock Data:", stockDataRow);
+console.log("Stock Error:", stockError);
+
+if (!stockDataRow) {
+
+  console.log(
+    "Creating stock row for:",
+    distributorDbName
+  );
+
+  const {
+    data: newStock,
+    error: insertError,
+  } = await supabase
+    .from("distributor_stock")
+    .insert([
+      {
+        distributor_name:
+          distributorDbName,
+        current_stock: 0,
+        reserved_stock: 0,
+      },
+    ])
+    .select()
+    .single();
+
+  console.log(
+    "Insert Error:",
+    insertError
+  );
+
+  console.log(
+    "New Stock:",
+    newStock
+  );
+
+  if (!insertError) {
+    setStockData(newStock);
+  }
+
+} else {
+
+  setStockData(stockDataRow);
+
+}
+
+  }
+}
+async function addStock() {
+
+  console.log("Add Stock clicked");
+  console.log(stockData);
+  console.log(stockInput);
+
+  if (!stockInput) return;
+
+  if (!stockData) {
+    alert("Stock data not loaded");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("distributor_stock")
+    .update({
+      current_stock:
+        (stockData.current_stock || 0) +
+        Number(stockInput),
+    })
+    .eq(
+      "distributor_name",
+      stockData.distributor_name
+    );
+
+  if (!error) {
+    setStockInput("");
     fetchDashboardData();
   }
+}
+
+  async function approveRequest(id) {
+
+  if (!stockData) {
+    alert("Stock record not found");
+    return;
+  }
+
+  const availableStock =
+  stockData.current_stock -
+  stockData.reserved_stock;
+
+if (availableStock <= 0) {
+  alert("No stock available to reserve");
+  return;
+}
+
+  const { error: stockError } = await supabase
+    .from("distributor_stock")
+    .update({
+      reserved_stock: stockData.reserved_stock + 1,
+    })
+    .eq("distributor_name", stockData.distributor_name);
+
+  if (stockError) {
+    console.log(stockError);
+    return;
+  }
+
+  const { error } = await supabase
+    .from("requests")
+    .update({ status: "Approved" })
+    .eq("id", id);
+
+  if (error) {
+    console.log(error);
+    return;
+  }
+
+  fetchDashboardData();
+}
 
  async function rejectRequest(id) {
   const { error } = await supabase
@@ -197,6 +291,33 @@ function DistributorPortal() {
 }
 
 async function markAsShipped(id) {
+
+  if (!stockData) {
+    alert("Stock record missing");
+    return;
+  }
+
+  if (stockData.current_stock <= 0) {
+    alert("No stock available");
+    return;
+  }
+
+  const { error: stockError } = await supabase
+    .from("distributor_stock")
+    .update({
+      current_stock: stockData.current_stock - 1,
+      reserved_stock: Math.max(
+        stockData.reserved_stock - 1,
+        0
+      ),
+    })
+    .eq("distributor_name", stockData.distributor_name);
+
+  if (stockError) {
+    console.log(stockError);
+    return;
+  }
+
   const { error } = await supabase
     .from("requests")
     .update({ status: "Shipped" })
@@ -204,11 +325,9 @@ async function markAsShipped(id) {
 
   if (error) {
     console.log(error);
-    alert("Failed to update shipment status");
     return;
   }
 
-  alert("Order marked as Shipped");
   fetchDashboardData();
 }
 
@@ -227,36 +346,6 @@ async function markAsCompleted(id) {
   alert("Order marked as Completed");
   fetchDashboardData();
 }
-
-async function addStock() {
-  if (!stockInput || !stockData) return;
-
-  const distributorNameKey = stockData.distributor_name || activeDistributor.name || "";
-  const { error } = await supabase
-    .from("distributor_stock")
-    .update({
-      current_stock: (stockData?.current_stock || 0) + Number(stockInput),
-    })
-    .eq("distributor_name", distributorNameKey);
-
-  if (!error) {
-    // NEW: log this addition so Government can audit received vs delivered
-    await supabase.from("stock_updates").insert([
-      {
-        distributor_name: stockData.distributor_name,
-        district: distributor?.district || null,
-        cylinder_type: "Standard",
-        quantity: Number(stockInput),
-        action: "Added",
-      },
-    ]);
-
-    setStockInput("");
-    fetchDashboardData();
-  }
-}
-
-
   function handleLogout() {
     localStorage.removeItem("distributorId");
     localStorage.removeItem("distributorName");
@@ -281,42 +370,25 @@ async function addStock() {
     </button>
   );
 
-  const activeDistributor = distributor || sampleDistributor;
+  const activeDistributor = distributor || {
+    name: distributorName, agency_name: distributorName,
+    state: "Not set",
+    district: "Not set",
+    status: "Active",
+    stock: 0,
+  };
 
   return (
     <DashboardLayout
       brand="Distributor Dashboard"
-      title={`Welcome, ${activeDistributor.name ||activeDistributor.agency_name || "Distributor"}`}
-      subtitle="Monitor assigned refill requests, decide status updates, and keep dispatch operations in view."
+     title="Distributor Operations Center"
+subtitle="Manage bookings, inventory, dispatch, and delivery workflow."
       navItems={navItems}
       activeView={activeView}
       onViewChange={setActiveView}
       topbarAction={topbarAction}
       sidebarFooter={sidebarFooter}
     >
-      <div className="distributor-hero-panel">
-        <div>
-          <p className="eyebrow">Operations Hub</p>
-          <h2>National Freight Tracking System</h2>
-          <p className="distributor-hero-text">
-            View inventory, live shipments, and alert-driven delivery actions within the distributor command center.
-          </p>
-        </div>
-        <div className="distributor-hero-kpis">
-          <div>
-            <strong>{approvedRequests.length + pendingRequests.length + shippedRequests.length + completedRequests.length}</strong>
-            <span>Total Active Orders</span>
-          </div>
-          <div>
-            <strong>{stockData?.current_stock ?? activeDistributor.stock ?? 0} MT</strong>
-            <span>Current Stock</span>
-          </div>
-          <div>
-            <strong>{shippedRequests.length}</strong>
-            <span>In Transit</span>
-          </div>
-        </div>
-      </div>
       {activeView === "pending" ? (
         <div className="dashboard-grid dashboard-grid-wide">
           <div className="metric-grid">
@@ -333,7 +405,7 @@ async function addStock() {
           <SectionCard
             eyebrow="Pending Requests"
             title="Action queue"
-            description="These requests stay filtered by distributor_id so the workflow remains unchanged."
+            description="These requests stay filtered by assigned_distributor so the workflow remains unchanged."
           >
             {pendingRequests.length === 0 ? (
               <div className="empty-state">
@@ -356,7 +428,7 @@ async function addStock() {
                       <p><span>District</span>{request.district || "-"}</p>
                       <p><span>State</span>{request.state || "-"}</p>
                       <p><span>Pincode</span>{request.pincode || "-"}</p>
-                      <p><span>Distributor</span>{request.distributor_id || "-"}</p>
+                      <p><span>Consumer</span>{request.consumer_name}</p>
                     </div>
 
                     <div className="card-actions">
@@ -374,6 +446,7 @@ async function addStock() {
           </SectionCard>
         </div>
       ) : null}
+
 
       {activeView === "approved" ? (
         <SectionCard
@@ -418,59 +491,15 @@ async function addStock() {
           )}
         </SectionCard>
       ) : null}
-
-     
-
-      {activeView === "stock" ? (
-        <div className="dashboard-grid">
-          <div className="metric-grid">
-            <MetricCard label="Current Stock" value={stockData?.current_stock ?? activeDistributor.stock ?? 0} description="Fetched from the distributor inventory record" tone="blue" />
-            <MetricCard label="Assigned District" value={activeDistributor.district || "Not set"} description="Operational region" tone="green" />
-            <MetricCard label="Service Status" value={activeDistributor.status || "Active"} description="Account state in Supabase" tone="orange" />
-          </div>
-
-          <SectionCard
-            eyebrow="Stock Overview"
-            title="Inventory context"
-            description="This panel keeps the existing schema unchanged while giving the distributor a high-level operational view."
-          >
-            <div className="timeline">
-              <div className="timeline-item">
-                <span className="timeline-step">01</span>
-                <div>
-                  <strong>Assigned cylinders</strong>
-                  <p>{stockData?.current_stock ?? activeDistributor.stock ?? 0} cylinders remain available for the current service area.</p>
-                </div>
-              </div>
-              <div className="timeline-item">
-                <span className="timeline-step">02</span>
-                <div>
-                  <strong>Request pressure</strong>
-                  <p>{pendingRequests.length} bookings are still waiting in the action queue.</p>
-                </div>
-              </div>
-              <div className="timeline-item">
-                <span className="timeline-step">03</span>
-                <div>
-                  <strong>Delivery readiness</strong>
-                  <p>{approvedRequests.length} approved bookings can move to dispatch planning.</p>
-                </div>
-              </div>
-            </div>
-          </SectionCard>
-        </div>
-      ) : null}
-
-      {activeView === "shipped" ? (
+{activeView === "shipped" ? (
   <SectionCard
     eyebrow="Shipped Orders"
-    title="Orders in transit"
-    description="Track all orders that have been shipped and are awaiting delivery."
+    title="Orders in Transit"
+    description="Track orders currently being delivered."
   >
     {shippedRequests.length === 0 ? (
       <div className="empty-state">
-        <h3>No shipped orders</h3>
-        <p>Mark an approved order as shipped to see it here.</p>
+        <h3>No orders in transit</h3>
       </div>
     ) : (
       <div className="record-grid">
@@ -478,23 +507,33 @@ async function addStock() {
           <article key={request.id} className="record-card">
             <div className="record-card-header">
               <div>
-                <p className="record-label">Request #{request.id}</p>
+                <p className="record-label">
+                  Request #{request.id}
+                </p>
                 <strong>{request.consumer_name}</strong>
               </div>
+
               <StatusBadge status={request.status} />
             </div>
 
             <div className="record-details">
-              <p><span>District</span>{request.district || "-"}</p>
-              <p><span>State</span>{request.state || "-"}</p>
-              <p><span>Pincode</span>{request.pincode || "-"}</p>
+              <p>
+                <span>District</span>
+                {request.district}
+              </p>
+
+              <p>
+                <span>State</span>
+                {request.state}
+              </p>
             </div>
 
             <div className="card-actions">
               <button
-                type="button"
                 className="primary-button"
-                onClick={() => markAsCompleted(request.id)}
+                onClick={() =>
+                  markAsCompleted(request.id)
+                }
               >
                 Mark Completed
               </button>
@@ -509,13 +548,13 @@ async function addStock() {
 {activeView === "completed" ? (
   <SectionCard
     eyebrow="Completed Orders"
-    title="Delivered orders"
+    title="Delivered Orders"
     description="Successfully completed LPG deliveries."
   >
     {completedRequests.length === 0 ? (
       <div className="empty-state">
-        <h3>No completed orders</h3>
-        <p>Completed deliveries will appear here.</p>
+        <h3>No completed deliveries</h3>
+        <p>Completed orders will appear here.</p>
       </div>
     ) : (
       <div className="record-grid">
@@ -523,16 +562,30 @@ async function addStock() {
           <article key={request.id} className="record-card">
             <div className="record-card-header">
               <div>
-                <p className="record-label">Request #{request.id}</p>
+                <p className="record-label">
+                  Request #{request.id}
+                </p>
                 <strong>{request.consumer_name}</strong>
               </div>
+
               <StatusBadge status={request.status} />
             </div>
 
             <div className="record-details">
-              <p><span>District</span>{request.district || "-"}</p>
-              <p><span>State</span>{request.state || "-"}</p>
-              <p><span>Pincode</span>{request.pincode || "-"}</p>
+              <p>
+                <span>District</span>
+                {request.district}
+              </p>
+
+              <p>
+                <span>State</span>
+                {request.state}
+              </p>
+
+              <p>
+                <span>Status</span>
+                Delivered
+              </p>
             </div>
           </article>
         ))}
@@ -540,44 +593,79 @@ async function addStock() {
     )}
   </SectionCard>
 ) : null}
+     
 
-      {activeView === "profile" ? (
+      {activeView === "stock" ? (
         <div className="dashboard-grid">
-          <SectionCard
-            eyebrow="Profile Page"
-            title="Distributor account snapshot"
-            description="The login identity is reused without changing the distributor table structure."
-          >
-            <div className="profile-summary vertical">
-              <p><strong>Agency:</strong> {activeDistributor.name || activeDistributor.agency_name ||"Not set"}</p>
-              <p><strong>State:</strong> {activeDistributor.state || "Not set"}</p>
-              <p><strong>District:</strong> {activeDistributor.district || "Not set"}</p>
-              <p><strong>Username:</strong> {distributor?.username || "Not set"}</p>
-              <p><strong>Status:</strong> {activeDistributor.status || "Active"}</p>
-              <p><strong>Stock:</strong> {activeDistributor.stock || 0}</p>
-            </div>
-          </SectionCard>
 
-          <SectionCard
-            eyebrow="Operational Summary"
-            title="Workflow health"
-            description="A concise summary of request movement through the existing approval flow."
-            compact
-          >
-            <div className="metric-grid">
-              <MetricCard label="Total requests" value={requests.length} description="Assigned to this distributor" tone="blue" />
-              <MetricCard label="Pending review" value={pendingRequests.length} description="Still waiting for action" tone="orange" />
-             <MetricCard
-  label="Completed"
-  value={completedRequests.length}
-  description="Successfully delivered"
-  tone="green"
-/>
-            </div>
-          </SectionCard>
-        </div>
-      ) : null}
-    </DashboardLayout>
+    <div className="metric-grid">
+      <MetricCard
+      label="Current Stock"
+      value={stockData?.current_stock || 0}
+      description="Available inventory"
+      tone="blue"
+    />
+
+    <MetricCard
+      label="Reserved Stock"
+      value={stockData?.reserved_stock || 0}
+      description="Allocated for approved orders"
+      tone="orange"
+    />
+
+    <MetricCard
+      label="Service Status"
+      value={activeDistributor.status || "Active"}
+      description="Account state"
+      tone="orange"
+    />
+  </div>
+
+<SectionCard
+  eyebrow="INVENTORY ACTION"
+  title="Warehouse Controls"
+  description="Manage LPG cylinder inventory"
+>
+  <div className="record-grid">
+
+    <div className="record-card">
+      <h3>Available To Allocate</h3>
+      <h1>
+        {(stockData?.current_stock || 0) -
+         (stockData?.reserved_stock || 0)}
+      </h1>
+      <p>Free cylinders available for new bookings</p>
+    </div>
+
+    <div className="record-card">
+      <h3>Add Stock</h3>
+      <p>Receive cylinders from supplier</p>
+
+      <input
+        type="number"
+        value={stockInput}
+        onChange={(e) => setStockInput(e.target.value)}
+        placeholder="Enter quantity"
+        className="text-input"
+        min="1"
+      />
+
+      <div style={{ marginTop: "12px" }}>
+        <button
+          type="button"
+          className="primary-button"
+          onClick={addStock}
+        >
+          Add Inventory
+        </button>
+      </div>
+    </div>
+
+  </div>
+</SectionCard>
+</div>
+) : null}
+</DashboardLayout>
   );
 }
 

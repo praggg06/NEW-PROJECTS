@@ -1,85 +1,71 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 
-const demoDistributors = [
-  { id: 1, name: "Mumbai LPG Distribution", username: "dist_mumbai", password: "Action123" },
-  { id: 2, name: "Delhi LPG Supply Co", username: "dist_delhi", password: "Secure321" },
-  { id: 3, name: "Gujarat Gas Agency", username: "dist_guj", password: "Launch2026" },
-  { id: 4, name: "Kolkata Cylinder Works", username: "dist_kolkata", password: "WestBengal@22" },
-  { id: 5, name: "Kerala Energy Hub", username: "dist_kerala", password: "Kerala@2026" },
-];
-
 function DistributorLogin({ onBackToHome, setPage })  {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  async function handleLogin(e) {
-    e.preventDefault();
+   async function handleLogin(e) {
+  e.preventDefault();
 
-    const { data, error } = await supabase
-      .from("distributors")
-      .select("*")
-      .eq("username", username)
-      .eq("password", password)
-      .single();
+  const { data, error } = await supabase
+    .from("distributors")
+    .select("*")
+    .eq("username", username)
+    .eq("password", password)
+    .single();
 
-    const fallback = demoDistributors.find(
-      (item) => item.username === username && item.password === password
-    );
-
-    if ((error || !data) && !fallback) {
-      alert("Invalid Username or Password");
-      console.log(error);
-      return;
-    }
-
-    const user = data || fallback;
-
-    localStorage.setItem(
-      "distributorId",
-      user.id
-    );
-
-    localStorage.setItem(
-      "distributorName",
-      user.name
-    );
-
-    alert("Login Successful");
-window.location.reload();
+  if (error || !data) {
+    alert("Invalid Username or Password");
+    console.log(error);
+    return;
   }
-return (
-  <div
-    style={{
-      minHeight: "100vh",
-      background:
-        "linear-gradient(135deg, #071426 0%, #081a34 50%, #071426 100%)",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      padding: "20px",
-      color: "white",
-      fontFamily: "Inter, sans-serif",
-      position: "relative",
-    }}
-  >
-    <button
-      onClick={onBackToHome}
+
+  localStorage.setItem(
+    "distributorId",
+    data.id
+  );
+
+  localStorage.setItem(
+    "distributorName",
+    data.name
+  );
+
+  alert("Login Successful");
+  window.location.reload();
+}
+  return (
+    <div
       style={{
-        position: "absolute",
-        top: "30px",
-        left: "30px",
-        padding: "12px 22px",
-        borderRadius: "999px",
-        border: "1px solid rgba(255,255,255,0.1)",
-        background: "#0C1D35",
+        minHeight: "100vh",
+        background:
+          "linear-gradient(135deg, #071426 0%, #081a34 50%, #071426 100%)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "20px",
         color: "white",
-        cursor: "pointer",
-        fontWeight: "600",
+        fontFamily: "Inter, sans-serif",
+        position: "relative",
       }}
     >
-      ← Back
-    </button>
+      <button
+        onClick={onBackToHome}
+        style={{
+          position: "absolute",
+          top: "30px",
+          left: "30px",
+          padding: "12px 22px",
+          borderRadius: "999px",
+          border: "1px solid rgba(255,255,255,0.1)",
+          background: "#0C1D35",
+          color: "white",
+          cursor: "pointer",
+          fontWeight: "600",
+        }}
+      >
+        ← Back
+      </button>
 
     <div
       style={{

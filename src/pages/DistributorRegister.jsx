@@ -20,10 +20,18 @@ function DistributorRegister({ onBackToHome }) {
           district,
           username,
           password,
-          stock: 0,
-          status: "Active",
         },
       ]);
+
+      await supabase
+  .from("distributor_stock")
+  .insert([
+    {
+      distributor_name: name,
+      current_stock: 0,
+      reserved_stock: 0,
+    },
+  ]);
 
     if (error) {
       console.log(error);

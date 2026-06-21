@@ -5,225 +5,79 @@ import MetricCard from "../components/MetricCard";
 import SectionCard from "../components/SectionCard";
 import StatusBadge from "../components/StatusBadge";
 
-const initialProfile = {
-  name: "",
-  phone: "",
-  email: "",
-  address: "",
-  city: "",
-  pincode: "",
-};
 
-const sampleBookingHistory = [
-  {
-    id: 101,
-    consumer_name: "Raj Kumar",
-    state: "Maharashtra",
-    district: "Mumbai",
-    distributor_id: 1,
-    pincode: "400001",
-    status: "Pending",
-  },
-  {
-    id: 102,
-    consumer_name: "Priya Singh",
-    state: "Delhi",
-    district: "South Delhi",
-    distributor_id: 2,
-    pincode: "110016",
-    status: "Approved",
-  },
-  {
-    id: 103,
-    consumer_name: "Amit Patel",
-    state: "Gujarat",
-    district: "Ahmedabad",
-    distributor_id: 3,
-    pincode: "380001",
-    status: "Shipped",
-  },
-  {
-    id: 104,
-    consumer_name: "Neha Verma",
-    state: "West Bengal",
-    district: "Kolkata",
-    distributor_id: 4,
-    pincode: "700001",
-    status: "Completed",
-  },
-  {
-    id: 105,
-    consumer_name: "Suresh Nair",
-    state: "Kerala",
-    district: "Thiruvananthapuram",
-    distributor_id: 5,
-    pincode: "695001",
-    status: "Rejected",
-  },
-  {
-    id: 106,
-    consumer_name: "Raj Kumar",
-    state: "Maharashtra",
-    district: "Pune",
-    distributor_id: 1,
-    pincode: "411001",
-    status: "Completed",
-  },
-  {
-    id: 107,
-    consumer_name: "Priya Singh",
-    state: "Delhi",
-    district: "North Delhi",
-    distributor_id: 2,
-    pincode: "110007",
-    status: "Shipped",
-  },
-];
-
-const sampleComplaints = [
-  {
-    id: 201,
-    consumer_name: "Raj Kumar",
-    state: "Maharashtra",
-    district: "Mumbai",
-    subject: "Delayed refill",
-    details: "Cylinder delivery was delayed and the customer was not notified.",
-    submittedAt: "2026-06-19 09:34",
-    status: "Open",
-  },
-  {
-    id: 202,
-    consumer_name: "Priya Singh",
-    state: "Delhi",
-    district: "South Delhi",
-    subject: "Distributor mismatch",
-    details: "Received wrong distributor details in the booking confirmation.",
-    submittedAt: "2026-06-20 10:15",
-    status: "In Progress",
-  },
-  {
-    id: 203,
-    consumer_name: "Neha Verma",
-    state: "West Bengal",
-    district: "Kolkata",
-    subject: "Poor cylinder condition",
-    details: "Cylinder seal was broken on arrival.",
-    submittedAt: "2026-06-20 16:50",
-    status: "Resolved",
-  },
-];
-
-const sampleRefundRequests = [
-  {
-    id: 301,
-    bookingRef: "103",
-    amount: "500",
-    reason: "Cylinder arrival was damaged.",
-    submittedAt: "2026-06-20 11:12",
-    status: "Under Review",
-  },
-  {
-    id: 302,
-    bookingRef: "104",
-    amount: "380",
-    reason: "Delayed delivery caused inconvenience.",
-    submittedAt: "2026-06-20 16:20",
-    status: "Approved",
-  },
-  {
-    id: 303,
-    bookingRef: "105",
-    amount: "420",
-    reason: "Wrong distributor assigned to my order.",
-    submittedAt: "2026-06-21 09:30",
-    status: "Pending",
-  },
-];
-
-const sampleDistributors = [
-  { id: 1, name: "Mumbai LPG Distribution", state: "Maharashtra", district: "Mumbai" },
-  { id: 2, name: "Delhi LPG Supply Co", state: "Delhi", district: "South Delhi" },
-  { id: 3, name: "Gujarat Gas Agency", state: "Gujarat", district: "Ahmedabad" },
-  { id: 4, name: "Kolkata Cylinder Works", state: "West Bengal", district: "Kolkata" },
-  { id: 5, name: "Kerala Energy Hub", state: "Kerala", district: "Thiruvananthapuram" },
-];
 
 function ConsumerPortal({ onBackToHome }) {
+  const consumerId =
+  localStorage.getItem("consumerId");
+  const [consumerData, setConsumerData] =
+  useState(null);
+
+  async function fetchConsumerData() {
+  const consumerNumber =
+    localStorage.getItem("consumerNumber");
+  
+  const { data, error } = await supabase
+    .from("consumers")
+    .select("*")
+    .eq("consumer_number", consumerNumber)
+    .single();
+
+  if (error) {
+    console.log(error);
+    return;
+  }
+
+  setConsumerData(data);
+}
+
+
   const [activeView, setActiveView] = useState("booking");
-  const [consumerName, setConsumerName] = useState("");
-  const [stateName, setStateName] = useState("");
-  const [districtName, setDistrictName] = useState("");
-  const [selectedDistributor, setSelectedDistributor] = useState("");
-  const [pincode, setPincode] = useState("");
-  const [distributors, setDistributors] = useState([]);
-  const [bookingHistory, setBookingHistory] = useState(sampleBookingHistory);
-  const [complaints, setComplaints] = useState(sampleComplaints);
-  const [refundRequests, setRefundRequests] = useState(sampleRefundRequests);
+  const [bookingHistory, setBookingHistory] = useState([]);
+  const [complaints, setComplaints] = useState([]);
+  const [showConfirmBox, setShowConfirmBox] =
+  useState(false);
+  
   const [complaintForm, setComplaintForm] = useState({
     subject: "",
     details: "",
   });
-  const [refundForm, setRefundForm] = useState({
-    bookingRef: "",
-    amount: "",
-    reason: "",
-  });
-  const [profile, setProfile] = useState(initialProfile);
 
   const districts = {
-    Maharashtra: ["Mumbai", "Pune", "Nagpur"],
-    Delhi: ["South Delhi", "North Delhi", "New Delhi"],
-    Gujarat: ["Ahmedabad", "Surat", "Vadodara"],
+    "Himachal Pradesh": ["Shimla", "Solan", "Bilaspur"],
     Kerala: ["Thiruvananthapuram", "Kochi", "Kozhikode"],
     "West Bengal": ["Kolkata", "Howrah", "Darjeeling"],
-    Karnataka: ["Bengaluru", "Mysuru", "Mangalore"],
   };
 
   const navItems = [
-    { id: "booking", label: "New Booking", description: "Create a refill request", icon: "01" },
-    { id: "history", label: "Booking History", description: "Track your latest status", icon: "02" },
-    { id: "complaints", label: "Complaint Section", description: "Raise a service issue", icon: "03" },
-    { id: "refunds", label: "Refund Request", description: "Submit a refund case", icon: "04" },
-    { id: "profile", label: "Profile Page", description: "Maintain account details", icon: "05" },
-  ];
+  {
+    id: "booking",
+    label: "Book Cylinder",
+    description: "Submit LPG refill request",
+    icon: "01",
+  },
+  {
+    id: "history",
+    label: "Booking History",
+    description: "Track request status",
+    icon: "02",
+  },
+  {
+    id: "complaints",
+    label: "Support",
+    description: "Raise service issues",
+    icon: "03",
+  },
+  {
+    id: "profile",
+    label: "Profile",
+    description: "Manage account details",
+    icon: "04",
+  },
+];
 
-  useEffect(() => {
-    fetchDistributors();
 
-    const savedProfile = window.localStorage.getItem("consumerProfile");
-    const savedLookupName =
-      window.localStorage.getItem("consumerLookupName") ||
-      window.localStorage.getItem("consumerName");
-
-    if (savedProfile) {
-      try {
-        const parsedProfile = JSON.parse(savedProfile);
-        setProfile({ ...initialProfile, ...parsedProfile });
-
-        if (parsedProfile.name) {
-          setConsumerName(parsedProfile.name);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    if (savedLookupName) {
-      setConsumerName(savedLookupName);
-      fetchBookingHistory(savedLookupName);
-    }
-  }, []);
-
-  async function fetchDistributors() {
-    const { data, error } = await supabase.from("distributors").select("*");
-
-    if (error || !data?.length) {
-      console.log(error);
-      setDistributors(sampleDistributors);
-    } else {
-      setDistributors(data || sampleDistributors);
-    }
-  }
+  
 
   async function fetchBookingHistory(consumerLookupName) {
     if (!consumerLookupName) {
@@ -243,131 +97,172 @@ function ConsumerPortal({ onBackToHome }) {
       setBookingHistory(data || []);
     }
   }
+  async function fetchComplaints(
+  consumerName
+) {
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (
-    !consumerName.trim() ||
-    !stateName ||
-    !districtName ||
-    !selectedDistributor ||
-    !pincode.trim()
+  const { data, error } =
+    await supabase
+      .from("complaints")
+      .select("*")
+      .eq(
+        "consumer_name",
+        consumerName
+      )
+      .order("id", {
+        ascending: false,
+      });
+
+  if (!error) {
+    setComplaints(data || []);
+  }
+
+}
+useEffect(() => {
+
+  fetchConsumerData();
+
+  const consumerName =
+    localStorage.getItem("consumerName");
+
+  fetchBookingHistory(
+    consumerName
+  );
+
+}, []);
+
+
+ async function handleSubmit() {
+
+  const existingPending =
+  bookingHistory.some(
+    (item) =>
+      item.status === "Pending"
+  );
+
+if (existingPending) {
+  alert(
+    "You already have a pending refill request."
+  );
+  return;
+}
+console.log("Consumer Data:", consumerData);
+  const { error } = await supabase
+  .from("requests")
+  .insert([
+    {
+      consumer_name:
+        consumerData.consumer_name,
+
+      state:
+        consumerData.state,
+
+      district:
+        consumerData.district,
+
+      pincode:
+        consumerData.pincode,
+
+      assigned_distributor:
+        consumerData.assigned_distributor,
+
+      status: "Pending",
+    },
+  ]);
+
+ if (error) {
+  console.log("FULL ERROR:", error);
+
+  alert(JSON.stringify(error));
+
+  return;
+}
+
+  alert(
+    "Refill Request Submitted Successfully"
+  );
+setShowConfirmBox(false);
+  fetchBookingHistory(
+    consumerData.consumer_name
+  );
+}
+
+  async function handleComplaintSubmit(e) {
+  e.preventDefault();
+
+  if (
+    !complaintForm.subject.trim() ||
+    !complaintForm.details.trim()
   ) {
-    alert("Please fill all fields");
+    alert("Please fill all complaint details");
     return;
   }
 
-    const { error } = await supabase.from("requests").insert([
+  const { error } = await supabase
+    .from("complaints")
+    .insert([
       {
-        consumer_name: consumerName,
-        state: stateName,
-        district: districtName,
-        distributor_id: Number(selectedDistributor),
-        pincode: pincode,
+        consumer_name:
+          consumerData.consumer_name,
+
+        assigned_distributor:
+          consumerData.assigned_distributor,
+
+        subject:
+          complaintForm.subject,
+
+        details:
+          complaintForm.details,
+
         status: "Pending",
       },
     ]);
 
-    if (error) {
-      console.log(error);
-      alert("Request Failed");
-      return;
-    }
+  if (error) {
+  console.log(error);
 
-    const nextProfile = {
-      ...profile,
-      name: consumerName,
-      state: stateName,
-      district: districtName,
-      pincode,
-    };
-
-    setProfile(nextProfile);
-    window.localStorage.setItem("consumerProfile", JSON.stringify(nextProfile));
-    window.localStorage.setItem("consumerLookupName", consumerName);
-    await fetchBookingHistory(consumerName);
-
-    alert("Refill request submitted successfully");
-
-    setStateName("");
-    setDistrictName("");
-    setSelectedDistributor("");
-    setPincode("");
-  }
-
-  function handleComplaintSubmit(e) {
-    e.preventDefault();
-
-    if (!complaintForm.subject.trim() || !complaintForm.details.trim()) {
-      alert("Please fill all  complaint details");
-      return;
-    }
-
-    setComplaints((current) => [
-      {
-        ...complaintForm,
-        id: Date.now(),
-        status: "Open",
-        submittedAt: new Date().toLocaleString(),
-      },
-      ...current,
-    ]);
-
-    setComplaintForm({ subject: "", details: "" });
-  }
-
-  function handleRefundSubmit(e) {
-    e.preventDefault();
-
-    if (!refundForm.bookingRef.trim() || !refundForm.reason.trim()) {
-      alert("Please fill all refund details");
-      return;
-    }
-
-    setRefundRequests((current) => [
-      {
-        ...refundForm,
-        id: Date.now(),
-        status: "Under Review",
-        submittedAt: new Date().toLocaleString(),
-      },
-      ...current,
-    ]);
-
-    setRefundForm({ bookingRef: "", amount: "", reason: "" });
-  }
-
-  function handleProfileSave(e) {
-    e.preventDefault();
-
-    const nextProfile = {
-      ...profile,
-      name: profile.name.trim(),
-    };
-
-    setProfile(nextProfile);
-    window.localStorage.setItem("consumerProfile", JSON.stringify(nextProfile));
-    window.localStorage.setItem("consumerLookupName", nextProfile.name);
-
-    if (nextProfile.name) {
-      setConsumerName(nextProfile.name);
-      fetchBookingHistory(nextProfile.name);
-    }
-
-    alert("Profile saved");
-  }
-
-  const filteredDistributors = distributors.filter(
-    (distributor) =>
-      districtName &&
-      distributor.district?.toLowerCase() === districtName.toLowerCase()
+  alert(
+    JSON.stringify(error)
   );
 
+  return;
+}
+
+  alert("Complaint Submitted");
+  fetchComplaints(
+  consumerData.consumer_name
+);
+
+  setComplaintForm({
+    subject: "",
+    details: "",
+  });
+}
+
   const bookingStats = [
-    { label: "Tracked requests", value: bookingHistory.length, description: "Requests matched by consumer name", tone: "blue" },
-    { label: "Open complaints", value: complaints.length, description: "Locally captured support cases", tone: "orange" },
-    { label: "Refund cases", value: refundRequests.length, description: "Pending refund submissions", tone: "green" },
-  ];
+  {
+    label: "Total Bookings",
+    value: bookingHistory.length,
+    description: "Cylinder refill requests",
+    tone: "blue",
+  },
+  {
+    label: "Pending",
+    value: bookingHistory.filter(
+      (item) => item.status === "Pending"
+    ).length,
+    description: "Awaiting processing",
+    tone: "orange",
+  },
+  {
+    label: "Delivered",
+    value: bookingHistory.filter(
+      (item) => item.status === "Delivered"
+    ).length,
+    description: "Completed deliveries",
+    tone: "green",
+  },
+];
 
   const topbarAction = (
   <button
@@ -382,17 +277,13 @@ function ConsumerPortal({ onBackToHome }) {
   </button>
 );
 
-  const sidebarFooter = (
-    <button type="button" className="ghost-button sidebar-footer-button" onClick={onBackToHome}>
-      Exit consumer workspace
-    </button>
-  );
+  const sidebarFooter = null;
 
   return (
     <DashboardLayout
       brand="Consumer Dashboard"
-      title="Manage your gas service from one workspace"
-      subtitle="Book refills, review request status, and keep service details current without changing the existing Supabase workflow."
+     title="LPG Consumer Dashboard"
+subtitle="Book LPG refills, track delivery status, and manage your account."
       navItems={navItems}
       activeView={activeView}
       onViewChange={setActiveView}
@@ -414,113 +305,121 @@ function ConsumerPortal({ onBackToHome }) {
               ))}
             </div>
 
-            <SectionCard
-              eyebrow="New Booking"
-              title="Submit a refill request"
-              description="The request is saved to the existing requests table with the assigned distributor id and pending status."
-            >
-              <form className="dashboard-form" onSubmit={handleSubmit}>
-                <div className="form-grid two-col">
-                  <label className="field">
-                    <span>Consumer Name</span>
-                    <input
-                      type="text"
-                      value={consumerName}
-                      onChange={(e) => setConsumerName(e.target.value)}
-                      placeholder="Enter consumer name"
-                      className="text-input"
-                    />
-                  </label>
+         <SectionCard
+  eyebrow="BOOK CYLINDER"
+  title="Book LPG Cylinder"
+  description="Submit a refill request and track its status from Booking History."
+>
+ <>
+  <div className="metric-grid">
 
-                  <label className="field">
-                    <span>State</span>
-                    <select
-                      value={stateName}
-                      onChange={(e) => {
-                        setStateName(e.target.value);
-                        setDistrictName("");
-                        setSelectedDistributor("");
-                      }}
-                      className="text-input"
-                    >
-                      <option value="">Select state</option>
-                      <option>Himachal Pradesh</option>
-                      <option>Kerala</option>
-                      <option>West Bengal</option>
-                    </select>
-                  </label>
+    <MetricCard
+      label="Consumer ID"
+      value={consumerData?.consumer_number || "-"}
+      tone="blue"
+    />
 
-                  <label className="field">
-                    <span>District</span>
-                    <select
-                      value={districtName}
-                      onChange={(e) => {
-                        setDistrictName(e.target.value);
-                        setSelectedDistributor("");
-                      }}
-                      className="text-input"
-                    >
-                      <option value="">Select district</option>
-                     {stateName && districts[stateName]
-  ? districts[stateName].map((district) => (
-                            <option key={district} value={district}>
-                              {district}
-                            </option>
-                          ))
-                        : null}
-                    </select>
-                  </label>
+    <MetricCard
+      label="Distributor"
+      value={consumerData?.assigned_distributor || "-"}
+      tone="green"
+    />
 
-                  <label className="field">
-                    <span>Distributor</span>
-                    <select
-                      value={selectedDistributor}
-                      onChange={(e) => setSelectedDistributor(e.target.value)}
-                      className="text-input"
-                    >
-                      <option value="">Select distributor</option>
-                      {filteredDistributors.map((distributor) => (
-                        <option key={distributor.id} value={distributor.id}>
-                          {distributor.name || distributor.agency_name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+    <MetricCard
+      label="Phone"
+      value={consumerData?.phone || "-"}
+      tone="orange"
+    />
 
-                  <label className="field">
-                    <span>Pincode</span>
-                    <input
-                      type="text"
-                      value={pincode}
-                      onChange={(e) => setPincode(e.target.value)}
-                      placeholder="Enter pincode"
-                      className="text-input"
-                    />
-                  </label>
-                </div>
+    <MetricCard
+      label="District"
+      value={consumerData?.district || "-"}
+      tone="blue"
+    />
 
-                <div className="form-actions">
-                  <button type="submit" className="primary-button">
-                    Request Refill
-                  </button>
-                </div>
-              </form>
-            </SectionCard>
+    <MetricCard
+      label="Village/city"
+      value={consumerData?.["village/city"] || "-"}
+      tone="green"
+    />
+
+    <MetricCard
+      label="Pincode"
+      value={consumerData?.pincode || "-"}
+      tone="orange"
+    />
+
+  </div>
+
+  <div style={{ marginTop: "30px" }}>
+    <button
+      className="primary-button"
+      onClick={() => setShowConfirmBox(true)}
+    >
+      Request Refill
+    </button>
+    {showConfirmBox && (
+  <div
+    style={{
+      marginTop: "20px",
+      padding: "20px",
+      borderRadius: "12px",
+      background: "#0C1D35",
+      border: "1px solid rgba(255,255,255,0.08)",
+    }}
+  >
+    <h3>Confirm Refill Request</h3>
+
+    <p>
+      Consumer ID:
+      {" "}
+      {consumerData?.consumer_number}
+    </p>
+
+    <p>
+      Distributor:
+      {" "}
+      {consumerData?.assigned_distributor}
+    </p>
+
+    <p>
+      Area:
+      {" "}
+      {consumerData?.["village/city"]},
+      {" "}
+      {consumerData?.district}
+    </p>
+
+    <div
+      style={{
+        display: "flex",
+        gap: "10px",
+        marginTop: "15px",
+      }}
+    >
+      <button
+        className="secondary-button"
+        onClick={() =>
+          setShowConfirmBox(false)
+        }
+      >
+        Cancel
+      </button>
+
+      <button
+        className="primary-button"
+        onClick={handleSubmit}
+      >
+        Confirm Request
+      </button>
+    </div>
+  </div>
+)}
+  </div>
+
+</>
+</SectionCard>
           </div>
-
-          <SectionCard
-            eyebrow="Current Profile"
-            title="Booking identity"
-            description="History is matched from the consumer name so the same record can be reviewed later."
-            compact
-          >
-            <div className="profile-summary">
-              <p><strong>Name:</strong> {profile.name || consumerName || "Not set"}</p>
-              <p><strong>State:</strong> {profile.state || stateName || "Not set"}</p>
-              <p><strong>District:</strong> {profile.district || districtName || "Not set"}</p>
-              <p><strong>Pincode:</strong> {profile.pincode || pincode || "Not set"}</p>
-            </div>
-          </SectionCard>
         </div>
       ) : null}
 
@@ -549,7 +448,10 @@ function ConsumerPortal({ onBackToHome }) {
                   <div className="record-details">
                     <p><span>State</span>{request.state || "-"}</p>
                     <p><span>District</span>{request.district || "-"}</p>
-                    <p><span>Distributor</span>{request.distributor_id || "-"}</p>
+                    <p>
+  <span>Distributor</span>
+  {request.assigned_distributor || "-"}
+</p>
                     <p><span>Pincode</span>{request.pincode || "-"}</p>
                   </div>
                 </article>
@@ -560,255 +462,154 @@ function ConsumerPortal({ onBackToHome }) {
       ) : null}
 
       {activeView === "complaints" ? (
-        <div className="dashboard-grid">
-          <SectionCard
-            eyebrow="Complaint Section"
-            title="Report a service issue"
-            description="Use this area to capture support problems while keeping the request flow unchanged."
-          >
-            <form className="dashboard-form" onSubmit={handleComplaintSubmit}>
-              <div className="form-grid">
-                <label className="field">
-                  <span>Subject</span>
-                  <input
-                    type="text"
-                    value={complaintForm.subject}
-                    onChange={(e) => setComplaintForm({ ...complaintForm, subject: e.target.value })}
-                    placeholder="Complaint subject"
-                    className="text-input"
-                  />
-                </label>
+  <div className="dashboard-grid">
 
-                <label className="field field-full">
-                  <span>Details</span>
-                  <textarea
-                    rows="6"
-                    value={complaintForm.details}
-                    onChange={(e) => setComplaintForm({ ...complaintForm, details: e.target.value })}
-                    placeholder="Describe the issue in detail"
-                    className="text-input"
-                  />
-                </label>
-              </div>
+    <SectionCard
+      eyebrow="Complaint Section"
+      title="Report a service issue"
+      description="Raise a complaint directly with your assigned distributor."
+    >
+      <form
+        className="dashboard-form"
+        onSubmit={handleComplaintSubmit}
+      >
+        <div className="form-grid">
 
-              <div className="form-actions">
-                <button type="submit" className="primary-button">
-                  Raise Complaint
-                </button>
-              </div>
-            </form>
-          </SectionCard>
+          <label className="field">
+            <span>Subject</span>
+            <input
+              type="text"
+              value={complaintForm.subject}
+              onChange={(e) =>
+                setComplaintForm({
+                  ...complaintForm,
+                  subject: e.target.value,
+                })
+              }
+              placeholder="Complaint subject"
+              className="text-input"
+            />
+          </label>
 
-          <SectionCard
-            eyebrow="Open Cases"
-            title="Recent complaint activity"
-            description="These entries remain local to the browser so the support panel can be used without changing the database schema."
-            compact
-          >
-            {complaints.length === 0 ? (
-              <div className="empty-state compact">
-                <h3>No complaints submitted</h3>
-                <p>Log the first support case from the form to the left.</p>
-              </div>
-            ) : (
-              <div className="record-list">
-                {complaints.map((complaint) => (
-                  <article key={complaint.id} className="support-card">
-                    <div className="record-card-header">
-                      <div>
-                        <p className="record-label">{complaint.subject}</p>
-                        <strong>{complaint.submittedAt}</strong>
-                      </div>
-                      <StatusBadge status={complaint.status} />
-                    </div>
-                    <p className="support-copy">{complaint.details}</p>
-                  </article>
-                ))}
-              </div>
-            )}
-          </SectionCard>
+          <label className="field field-full">
+            <span>Details</span>
+            <textarea
+              rows="6"
+              value={complaintForm.details}
+              onChange={(e) =>
+                setComplaintForm({
+                  ...complaintForm,
+                  details: e.target.value,
+                })
+              }
+              placeholder="Describe the issue"
+              className="text-input"
+            />
+          </label>
+
         </div>
-      ) : null}
 
-      {activeView === "refunds" ? (
-        <div className="dashboard-grid">
-          <SectionCard
-            eyebrow="Refund Request Section"
-            title="Submit a refund case"
-            description="Capture refund details alongside the booking reference for support follow-up."
+        <div className="form-actions">
+          <button
+            type="submit"
+            className="primary-button"
           >
-            <form className="dashboard-form" onSubmit={handleRefundSubmit}>
-              <div className="form-grid two-col">
-                <label className="field">
-                  <span>Booking Reference</span>
-                  <input
-                    type="text"
-                    value={refundForm.bookingRef}
-                    onChange={(e) => setRefundForm({ ...refundForm, bookingRef: e.target.value })}
-                    placeholder="Booking reference"
-                    className="text-input"
-                  />
-                </label>
-
-                <label className="field">
-                  <span>Amount</span>
-                  <input
-                    type="text"
-                    value={refundForm.amount}
-                    onChange={(e) => setRefundForm({ ...refundForm, amount: e.target.value })}
-                    placeholder="Refund amount"
-                    className="text-input"
-                  />
-                </label>
-
-                <label className="field field-full">
-                  <span>Reason</span>
-                  <textarea
-                    rows="6"
-                    value={refundForm.reason}
-                    onChange={(e) => setRefundForm({ ...refundForm, reason: e.target.value })}
-                    placeholder="Explain why the refund is required"
-                    className="text-input"
-                  />
-                </label>
-              </div>
-
-              <div className="form-actions">
-                <button type="submit" className="primary-button">
-                  Request Refund
-                </button>
-              </div>
-            </form>
-          </SectionCard>
-
-          <SectionCard
-            eyebrow="Submitted Refunds"
-            title="Local refund queue"
-            description="Refund requests can be reviewed here before they are handled by support staff."
-            compact
-          >
-            {refundRequests.length === 0 ? (
-              <div className="empty-state compact">
-                <h3>No refund requests yet</h3>
-                <p>Use the form to create the first refund case.</p>
-              </div>
-            ) : (
-              <div className="record-list">
-                {refundRequests.map((refund) => (
-                  <article key={refund.id} className="support-card">
-                    <div className="record-card-header">
-                      <div>
-                        <p className="record-label">Booking {refund.bookingRef}</p>
-                        <strong>Requested on {refund.submittedAt}</strong>
-                      </div>
-                      <StatusBadge status={refund.status} />
-                    </div>
-                    <p className="support-copy">{refund.reason}</p>
-                    <p className="support-copy muted">Amount: {refund.amount || "Not provided"}</p>
-                  </article>
-                ))}
-              </div>
-            )}
-          </SectionCard>
+            Raise Complaint
+          </button>
         </div>
-      ) : null}
+      </form>
+    </SectionCard>
 
-      {activeView === "profile" ? (
-        <div className="dashboard-grid">
-          <SectionCard
-            eyebrow="Profile Page"
-            title="Maintain consumer profile details"
-            description="Keep identity and contact information ready for future refill requests and service follow-up."
-          >
-            <form className="dashboard-form" onSubmit={handleProfileSave}>
-              <div className="form-grid two-col">
-                <label className="field">
-                  <span>Full Name</span>
-                  <input
-                    type="text"
-                    value={profile.name}
-                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                    placeholder="Consumer name"
-                    className="text-input"
-                  />
-                </label>
-                <label className="field">
-                  <span>Phone Number</span>
-                  <input
-                    type="text"
-                    value={profile.phone}
-                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                    placeholder="Mobile number"
-                    className="text-input"
-                  />
-                </label>
-                <label className="field">
-                  <span>Email Address</span>
-                  <input
-                    type="email"
-                    value={profile.email}
-                    onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                    placeholder="Email address"
-                    className="text-input"
-                  />
-                </label>
-                <label className="field">
-                  <span>City</span>
-                  <input
-                    type="text"
-                    value={profile.city}
-                    onChange={(e) => setProfile({ ...profile, city: e.target.value })}
-                    placeholder="City"
-                    className="text-input"
-                  />
-                </label>
-                <label className="field field-full">
-                  <span>Address</span>
-                  <textarea
-                    rows="5"
-                    value={profile.address}
-                    onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                    placeholder="Residential address"
-                    className="text-input"
-                  />
-                </label>
-                <label className="field">
-                  <span>Pincode</span>
-                  <input
-                    type="text"
-                    value={profile.pincode}
-                    onChange={(e) => setProfile({ ...profile, pincode: e.target.value })}
-                    placeholder="Pincode"
-                    className="text-input"
-                  />
-                </label>
-              </div>
+    <SectionCard
+      eyebrow="Complaint History"
+      title="Your Complaints"
+      description="Track complaint status."
+      compact
+    >
+      {complaints.length === 0 ? (
+        <div className="empty-state compact">
+          <h3>No complaints submitted</h3>
+          <p>
+            Raise your first complaint.
+          </p>
+        </div>
+      ) : (
+        <div className="record-list">
 
-              <div className="form-actions">
-                <button type="submit" className="primary-button">
-                  Save Profile
-                </button>
-              </div>
-            </form>
-          </SectionCard>
+          {complaints.map((complaint) => (
+            <div
+              key={complaint.id}
+              className="request-card"
+            >
+              <h3>{complaint.subject}</h3>
 
-          <SectionCard
-            eyebrow="Saved Snapshot"
-            title="Profile summary"
-            description="The saved profile is reused when matching the consumer booking history."
-            compact
-          >
-            <div className="profile-summary vertical">
-              <p><strong>Name:</strong> {profile.name || "Not set"}</p>
-              <p><strong>Phone:</strong> {profile.phone || "Not set"}</p>
-              <p><strong>Email:</strong> {profile.email || "Not set"}</p>
-              <p><strong>City:</strong> {profile.city || "Not set"}</p>
-              <p><strong>Address:</strong> {profile.address || "Not set"}</p>
-              <p><strong>Pincode:</strong> {profile.pincode || "Not set"}</p>
+              <p>{complaint.details}</p>
+
+              <p>
+                Status:
+                <strong>
+                  {" "}
+                  {complaint.status}
+                </strong>
+              </p>
             </div>
-          </SectionCard>
+          ))}
+
         </div>
-      ) : null}
+      )}
+    </SectionCard>
+
+  </div>
+) : null}
+      {activeView === "profile" ? (
+  <SectionCard
+    eyebrow="PROFILE"
+    title="Consumer Information"
+    description="Details linked to your LPG connection."
+  >
+    <div className="record-grid">
+
+      <MetricCard
+        label="Consumer ID"
+        value={consumerData?.consumer_number || "-"}
+        tone="blue"
+      />
+
+      <MetricCard
+        label="Phone"
+        value={consumerData?.phone || "-"}
+        tone="green"
+      />
+
+      <MetricCard
+        label="District"
+        value={consumerData?.district || "-"}
+        tone="orange"
+      />
+
+      <MetricCard
+        label="Village / City"
+        value={consumerData?.["village/city"] || "-"}
+        tone="blue"
+      />
+
+      <MetricCard
+        label="Pincode"
+        value={consumerData?.pincode || "-"}
+        tone="green"
+      />
+
+      <MetricCard
+        label="Distributor"
+        value={
+          consumerData?.assigned_distributor || "-"
+        }
+        tone="orange"
+      />
+
+    </div>
+  </SectionCard>
+) : null}
     </DashboardLayout>
   );
 }
